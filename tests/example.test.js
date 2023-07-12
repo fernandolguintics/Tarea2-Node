@@ -1,35 +1,39 @@
 const puppeteer = require('puppeteer')
+const expect = require('chai').expect
 
-describe('Mi primer prueba abriendo un navegador',()=>{
-    it('Debe buscar consolas de Xbox One', async()=>{
-        const browser = await puppeteer.launch({ headless: false })
-        const page = await browser.newPage()
-        await page.goto('https://www.amazon.com/')
-        await page.locator('input[id="twotabsearchtextbox"]').fill('xbox one')
-        await page.click('input[id="nav-search-submit-button"]')
-        await new Promise(r => setTimeout(r,5000))
-        await browser.close();
-    })
-    it('Debe buscar consolas de PlayStation 4 con xpath', async()=>{
-        const browser = await puppeteer.launch({ headless: false })
-        const page = await browser.newPage()
-        await page.goto('https://www.amazon.com/')
-        var searchInput = await page.waitForXPath('(//*[@id="twotabsearchtextbox"])')
-        await searchInput.type('playstation 4')
-        var buttonSearch = await page.waitForXPath('(//*[@id="nav-search-submit-button"])')
-        await buttonSearch.click()
-        await new Promise(r => setTimeout(r,5000))
-        await browser.close();
-    })
-    it('Debe buscar consolas de Switch con css', async()=>{
-        const browser = await puppeteer.launch({ headless: false })
-        const page = await browser.newPage()
-        await page.goto('https://www.amazon.com/')
-        var searchInput = await page.waitForSelector('::-p-xpath(//*[@id="twotabsearchtextbox"])')
-        await searchInput.type('Nintendo Switch')
-        var buttonSearch = await page.waitForSelector('::-p-xpath(//*[@id="nav-search-submit-button"])')
-        await buttonSearch.click()
-        await new Promise(r => setTimeout(r,5000))
-        await browser.close();
-    })
+describe('Agregar producto al carrito de Amazon', () => {
+  let browser, page
+
+  before(async () => {
+    browser = await puppeteer.launch({ headless: false })
+    page = await browser.newPage()
+    await page.goto('https://www.amazon.com.mx/')
+  })
+  after(async () => {
+    await browser.close()
+  })
+
+  it('Validar precio del carrito', async () => {
+    await page.click('#nav-xshop > a:nth-child(4)')
+    var seleccionarProducto = await page.waitForXPath(
+      '(//*[@id="B07TGSH6MF"]/a[2]/span/div)'
+    )
+    await seleccionarProducto.click()
+    await new Promise((r) => setTimeout(r, 5000))
+    const obtenerPrecioProducto = await page.$(
+      '#corePriceDisplay_desktop_feature_div > div.a-section.a-spacing-none.aok-align-center > span.a-price.aok-align-center.reinventPricePriceToPayMargin.priceToPay > span.a-offscreen'
+    )
+    const precioProducto = await (
+      await obtenerPrecioProducto.getProperty('textContent')
+    ).jsonValue()
+    await page.click('#add-to-cart-button')
+    await new Promise((r) => setTimeout(r, 5000))
+    const obtenerPrecioProductoCarrito = await page.$(
+      '#sw-subtotal > span:nth-child(2) > span > span.a-offscreen'
+    )
+    const precioProductoCarrito = await (
+      await obtenerPrecioProductoCarrito.getProperty('textContent')
+    ).jsonValue()
+    expect(precioProducto).to.be.equals(precioProductoCarrito)
+  })
 })

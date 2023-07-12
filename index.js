@@ -1,4 +1,4 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer')
 
 async function pruebadeNavegador() {
     const browser = await puppeteer.launch({ headless: false, slowMo:500 })
